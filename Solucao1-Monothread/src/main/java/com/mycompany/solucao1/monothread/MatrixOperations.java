@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -42,6 +44,7 @@ public class MatrixOperations {
                 rowIndex++;
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             System.out.println("You have to define the size of the matrix!");
         }
 
@@ -51,6 +54,11 @@ public class MatrixOperations {
     public void calculateMatrix(double[][] matrix1, double[][] matrix2) {
         if (this.size > 0) {
             BigDecimal[][] resultantMatrix = new BigDecimal[this.size][this.size];
+
+            //time variables
+            long startTime = System.nanoTime();
+            ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+            long startCpuTime = bean.getCurrentThreadCpuTime();
 
             for (int row = 0; row < this.size; row++) {
                 for (int column = 0; column < this.size; column++) {
@@ -69,8 +77,23 @@ public class MatrixOperations {
                 }
             }
             
-            saveMatrixToFile(resultantMatrix);
+            // Fim da medição do tempo total de relógio
+            long endTime = System.nanoTime();
+            long elapsedTime = endTime - startTime;
+
+            // Fim da medição do tempo total de CPU
+            long endCpuTime = bean.getCurrentThreadCpuTime();
+            long elapsedCpuTime = endCpuTime - startCpuTime;
+
+            // Converte o tempo para milissegundos
+            double elapsedTimeInMs = elapsedTime / 1_000_000.0;
+            double elapsedCpuTimeInMs = elapsedCpuTime / 1_000_000.0;
+
+            System.out.println("Real clock time: " + elapsedTimeInMs + " ms");
+            System.out.println("CPU time: " + elapsedCpuTimeInMs + " ms");
             
+            saveMatrixToFile(resultantMatrix);
+
         }
     }
 
@@ -80,7 +103,7 @@ public class MatrixOperations {
         strBuilder.append(userDir);
         strBuilder.append("\\resultants\\resultant.txt");
         String filePath = strBuilder.toString();
-        
+
         strBuilder.setLength(0);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             // Itera sobre as linhas da matriz
@@ -102,7 +125,7 @@ public class MatrixOperations {
                 writer.write(strBuilder.toString());
                 writer.newLine(); // Nova linha após cada linha da matriz
             }
-            
+
             writer.close();
             System.out.println("Resultant matrix saved successfully!");
         } catch (IOException e) {
